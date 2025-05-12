@@ -1,6 +1,4 @@
-const {
-  REGISTRATION_SUCCESS_MESSAGE,
-} = require("../../../thomasberlin21/backend/utils/response");
+const { REGISTRATION_SUCCESS_MESSAGE } = require("../utils/response");
 const Prisma = require("../config/db.connect");
 const {
   QUERY_SUCCESSFUL_MESSAGE,
