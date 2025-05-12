@@ -1,0 +1,217 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model user{
+  id String @id @default(uuid())
+  username String
+  email String @unique
+  phone Int?
+  address String?
+  role Role
+  password String
+  profile String?
+  businesses business[]
+  categories category[]
+  userMemberships userMembership[]
+  businessResults businessResult[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model userMembership {
+  id String @id @default(uuid())
+  name String
+  plan BusinessPlan
+  price Int
+  duration Int
+  start_at DateTime @default(now())
+  end_at String
+  active Boolean
+  transactionId String
+  userId String 
+  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+
+
+enum BusinessPlan {
+  BASIC
+  MEDIUM
+  PREMIUM
+}
+
+model business {
+  id String @id @default(uuid())
+  name String
+  sector String
+  description String
+  userId String
+  verify Boolean @default(true)
+  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categories category[]
+  businessResults businessResult[]
+  cashflows  cashflow[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model category {
+  id String @id @default(uuid())
+  name String
+  category CategoryName
+  firstYear Float
+  expectedPercent Int
+  budgetPercent Float?
+  flowPercent Float?
+  secondYear Float?
+  deviation Float?
+  type Type
+  userId String
+  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessId String
+  business business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  permonths permonth[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+enum Type {
+  INCOME
+  EXPENSE
+}
+
+enum CategoryName {
+  SALES_REVENUE
+  CAPITAL_INCRIEASE_LOAN
+  COST_OF_SALES
+  EXTRAORDINARY
+  PERSOANL
+  FINIANCIAL
+}
+
+
+model businessResult {
+  id String @id @default(uuid())
+  name ResultName?
+  firstYear Float?
+  secondYear Float?
+  budgetPercent Float?
+  expectedPercent Float?
+  flowPercent Float?
+  deviation Float?
+  businessId String
+  business business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  permonths permonth[]
+  userId String
+  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+enum ResultName {
+  TOTAL_PAYMENT_FOR_MONTH
+  MONTHLY_SALES_FORECAST
+  TOTAL_SALES_REVENUE
+  TOTAL_CAPITAL_INCRIEASE_LOAN
+  TOTAL_EXPENSES
+  TOTAL_COST_OF_SALES
+  TOTAL_SHOPPING
+  TOTAL_EXTRAORDINARY_EXPENSES
+  TOTAL_PERSOANL_EXPENSES
+  TOTAL_FINIANCIAL_EXPENSES
+  DIRECT_EXPENSES
+  EBITDA
+  BUDGET_DEPRECIATION
+  PROJECTION_DEPRECIATION
+  DIRECT_RESULT
+  OTHER_INCOME_EXPENSES
+  OPERATING_PROFIT
+  CUMULATIVE_RESULT
+}
+
+
+model cashflow {
+  id String @id @default(uuid())
+  name FlowName
+  total Float?
+  flowPercent Float?
+  inputPercent Float?
+  businessId String
+  business business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  permonths cashflowmonth[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+enum FlowName {
+  ACCUMULATED_BALANCE_BEGAINING
+  ACCUMULATED_BALANCE_END
+  SALES_COLLECTIONS
+  PREVIOUS_BALANCE
+  TOTAL_PERCENT_FOR_COLLECTION
+  UNPAIN_PERCENT
+  RECOVERED_PERCENT
+  TOTAL_OPERATING_COLLECTION
+  TOTAL_OTHER_CHARGES
+  TOTAL_NET_COLLECTIONS
+  OPERATIONAL_PAYMENTS
+  TOTAL_OPERATING_PAYMENTS
+  OTHER_PAYMENTS
+  TOTAL_OTHER_PAYMENTS
+  TOTAL_PAYMENTS
+  MONTHLY_NET_BALANCE
+}
+
+model cashflowmonth {
+  id String @id @default(uuid())
+  name MonthName
+  value Float          
+  cashflowId String
+  ownername String
+  cashflow cashflow @relation(fields: [cashflowId], references: [id], onDelete: Cascade)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model permonth {
+  id String @id @default(uuid())
+  name MonthName
+  value Float
+  ownername String          
+  categoryId String?
+  category category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  businessResultId String?
+  businessResults businessResult? @relation(fields: [businessResultId], references: [id], onDelete: Cascade)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+enum MonthName {
+  JANUARY
+  FEBRUARY
+  MARCH
+  APRIL
+  MAY
+  JUNE
+  JULY
+  AUGUST
+  SEPTEMBER
+  OCTOBER
+  NOVEMBER
+  DECEMBER
+}
