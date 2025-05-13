@@ -558,7 +558,7 @@ async function createBudgetCalculation(req, res) {
     if (existBusiness?.cashflows?.length === 0) {
       await createBlankInstance(businessId);
     }
-    await finalCalculation(true, userId, businessId);
+    await finalCalculation(false, userId, businessId);
     res.status(200).json({
       status: SUCCESS_STATUS,
       message: QUERY_SUCCESSFUL_MESSAGE,
