@@ -1,23 +1,9 @@
 const Prisma = require("../config/db.connect");
 const {
   devidePerMonth,
-  categoryFlowPercentCal,
-  categoryTotalFlowPercentCal,
   updateCategoryAll,
 } = require("../helper/budget.calculation");
-const budgetCategoryTotalCalculation = require("../helper/budget.category.total.calculation");
 const createBlankInstance = require("../helper/cashflow/create.blank.instance");
-const requestPercentCal = require("../helper/cashflow/request.percent.cal");
-const requestPermonthCal = require("../helper/cashflow/request.permonth.cal");
-const requestTotalCal = require("../helper/cashflow/request.total.cal");
-const {
-  businessResBudgetPercentCal,
-  totalSalesRevFlowPercentCal,
-  otherIncomeExpenseFlowpercentCal,
-} = require("../helper/businessRes.budgetPercent.cal");
-const requestFullCalculation = require("../helper/request.full.calculation");
-const salesForeCastCal = require("../helper/sales.forecast.cal");
-const totalExpensesCal = require("../helper/total.expense.cal");
 const {
   BUSINESS_CREATE_SUCCESS_MESSAGE,
   QUERY_SUCCESSFUL_MESSAGE,
@@ -103,14 +89,6 @@ async function getAllBusinessDefaultByUserid(req, res) {
 async function createBusiness(req, res) {
   const { userId, name, sector, description } = req.body;
   try {
-    const newBusiness = await Prisma.business.create({
-      data: {
-        userId,
-        name,
-        sector,
-        description,
-      },
-    });
     const membership = await Prisma.userMembership.findFirst({
       where: { userId },
     });
@@ -120,6 +98,14 @@ async function createBusiness(req, res) {
         message: "You do not have valid membership",
       });
     }
+    const newBusiness = await Prisma.business.create({
+      data: {
+        userId,
+        name,
+        sector,
+        description,
+      },
+    });
     res.status(201).json({
       status: SUCCESS_STATUS,
       message: BUSINESS_CREATE_SUCCESS_MESSAGE,
@@ -471,11 +457,6 @@ async function updateCategoryById(req, res) {
       },
     });
     await updatePermonth(id, firstYear);
-    await budgetCategoryTotalCalculation(true, userId, businessId);
-    await totalExpensesCal(true, businessId, userId);
-    await requestFullCalculation(true, businessId, userId);
-    await businessResBudgetPercentCal(businessId, userId);
-    await salesForeCastCal(true, businessId, userId);
     res.status(200).json({
       status: SUCCESS_STATUS,
       message: UPDATE_SUCCESSFUL_MESSAGE,
@@ -577,11 +558,6 @@ async function createBudgetCalculation(req, res) {
     if (existBusiness?.cashflows?.length === 0) {
       await createBlankInstance(businessId);
     }
-    await budgetCategoryTotalCalculation(false, userId, businessId);
-    await totalExpensesCal(false, businessId, userId);
-    await requestFullCalculation(false, businessId, userId);
-    await businessResBudgetPercentCal(businessId, userId);
-    await salesForeCastCal(false, businessId, userId);
     await finalCalculation(true, userId, businessId);
     res.status(200).json({
       status: SUCCESS_STATUS,
@@ -831,14 +807,6 @@ async function CashflowTotalCalculation(req, res) {
         message: DATA_NOT_FOUND_MESSAGE,
       });
     }
-
-    await requestPermonthCal(userId, businessId);
-    await requestTotalCal(businessId);
-    await requestPercentCal(businessId);
-    await categoryFlowPercentCal(userId, businessId);
-    await categoryTotalFlowPercentCal(userId, businessId);
-    await totalSalesRevFlowPercentCal(businessId, userId);
-    await otherIncomeExpenseFlowpercentCal(businessId);
     await finalCalculation(true, userId, businessId);
     res.status(200).json({
       status: SUCCESS_STATUS,
