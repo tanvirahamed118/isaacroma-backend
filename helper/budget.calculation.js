@@ -204,7 +204,7 @@ async function createCumulativePerMonth(update, userId, businessId) {
   }
 }
 
-async function categoryTotalCal(categories, name, businessId, userId, update) {
+async function categoryTotalCal(categories, name, businessId, userId) {
   const totalFirstYear = categories.reduce(
     (sum, item) => sum + (item.firstYear || 0),
     0
@@ -222,51 +222,26 @@ async function categoryTotalCal(categories, name, businessId, userId, update) {
     ((totalSecondYear / totalFirstYear - 1) * 100).toFixed(2)
   );
 
-  if (update) {
-    const existBusinessResult = await Prisma.businessResult.findFirst({
-      where: {
-        businessId: businessId,
-        userId: userId,
-        name: name,
-      },
-    });
+  const existBusinessResult = await Prisma.businessResult.findFirst({
+    where: {
+      businessId: businessId,
+      userId: userId,
+      name: name,
+    },
+  });
 
-    await Prisma.businessResult.update({
-      where: {
-        id: existBusinessResult?.id,
-      },
-      data: {
-        firstYear: Math.ceil(totalFirstYear),
-        secondYear: Math.ceil(totalSecondYear),
-        deviation: Math.ceil(totalDeviation),
-        expectedPercent: totalExpectedPercent,
-      },
-    });
-    await updatePerMonthForBusinessRes(totalFirstYear, existBusinessResult?.id);
-  } else {
-    const existResult = await Prisma.businessResult.findFirst({
-      where: {
-        name: name,
-        businessId: businessId,
-        userId: userId,
-      },
-    });
-    if (existResult) {
-      return;
-    }
-    const newBusinessResult = await Prisma.businessResult.create({
-      data: {
-        name: name,
-        firstYear: Math.ceil(totalFirstYear),
-        secondYear: Math.ceil(totalSecondYear),
-        deviation: Math.ceil(totalDeviation),
-        expectedPercent: totalExpectedPercent,
-        businessId: businessId,
-        userId: userId,
-      },
-    });
-    await devidePerMonth(name, totalFirstYear, null, newBusinessResult?.id);
-  }
+  await Prisma.businessResult.update({
+    where: {
+      id: existBusinessResult?.id,
+    },
+    data: {
+      firstYear: Math.ceil(totalFirstYear),
+      secondYear: Math.ceil(totalSecondYear),
+      deviation: Math.ceil(totalDeviation),
+      expectedPercent: totalExpectedPercent,
+    },
+  });
+  await updatePerMonthForBusinessRes(totalFirstYear, existBusinessResult?.id);
 }
 
 async function categoryFlowPercentCal(userId, businessId) {
