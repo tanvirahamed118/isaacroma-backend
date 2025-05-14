@@ -437,7 +437,7 @@ async function createCategory(req, res) {
 }
 
 async function updateCategoryById(req, res) {
-  const { name, firstYear, expectedPercent, userId, businessId } = req.body;
+  const { name, firstYear, expectedPercent } = req.body;
   const id = req.params.id;
 
   const secondYear =
@@ -572,7 +572,7 @@ async function createBudgetCalculation(req, res) {
   }
 }
 
-async function updatePerMonth(req, res) {
+async function updateCategoryPerMonth(req, res) {
   const { id } = req.params;
   const { value, categoryId, userId, businessId } = req.body;
 
@@ -893,7 +893,7 @@ module.exports = {
   createCategory,
   deleteCategory,
   createBudgetCalculation,
-  updatePerMonth,
+  updateCategoryPerMonth,
   getOneBusiness,
   deleteBusiness,
   updateDeprecationProjection,

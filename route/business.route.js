@@ -4,9 +4,8 @@ const {
   createCategory,
   deleteCategory,
   createBudgetCalculation,
-  updateDeprecationPerMonth,
   updateDeprecationProjection,
-  updatePerMonth,
+  updateCategoryPerMonth,
   getOneBusiness,
   deleteBusiness,
   updateCashflowMonth,
@@ -45,7 +44,7 @@ router.post("/category", auth, createCategory);
 // update
 router.patch("/:id", auth, updateBusiness);
 router.patch("/cashflow/percent/:id", auth, updateCashflowPercent);
-router.patch("/update/permonth/:id", auth, updatePerMonth);
+router.patch("/update/permonth/:id", auth, updateCategoryPerMonth);
 router.patch("/update/projection/:id", auth, updateDeprecationProjection);
 router.patch("/cashflow/permonth/:id", auth, updateCashflowMonth);
 router.patch("/cashflow/single/:id", auth, updateCashflowAccoumulatedMonth);
