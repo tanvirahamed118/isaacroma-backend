@@ -1,6 +1,6 @@
 const Prisma = require("../config/db.connect");
 
-async function budgetDeprecationCal(update, businessId, userId) {
+async function budgetDeprecationCal(businessId, userId) {
   const existbusinessResult = await Prisma.businessResult.findFirst({
     where: {
       businessId,
@@ -30,17 +30,15 @@ async function budgetDeprecationCal(update, businessId, userId) {
     (totalFirstYear / existForeCast?.firstYear) * 100
   );
 
-  if (update) {
-    await Prisma.businessResult.update({
-      where: {
-        id: existbusinessResult?.id,
-      },
-      data: {
-        firstYear: Math.ceil(totalFirstYear),
-        budgetPercent: totalPercent,
-      },
-    });
-  }
+  await Prisma.businessResult.update({
+    where: {
+      id: existbusinessResult?.id,
+    },
+    data: {
+      firstYear: Math.ceil(totalFirstYear),
+      budgetPercent: totalPercent,
+    },
+  });
 }
 
 module.exports = budgetDeprecationCal;

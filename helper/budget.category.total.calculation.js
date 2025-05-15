@@ -1,8 +1,7 @@
 const Prisma = require("../config/db.connect");
 const { categoryTotalCal } = require("./budget.calculation");
-const createBudgetTotalInstance = require("./create.budgetTotal.instance");
 
-async function budgetCategoryTotalCalculation(update, userId, businessId) {
+async function budgetCategoryTotalCalculation(userId, businessId) {
   const categories = await Prisma.category.findMany({
     where: {
       businessId: businessId,
@@ -56,30 +55,6 @@ async function budgetCategoryTotalCalculation(update, userId, businessId) {
   );
   await categoryTotalCal(
     financial,
-    "TOTAL_FINIANCIAL_EXPENSES",
-    businessId,
-    userId
-  );
-
-  // instance create here
-  await createBudgetTotalInstance("TOTAL_SALES_REVENUE", businessId, userId);
-  await createBudgetTotalInstance(
-    "TOTAL_CAPITAL_INCRIEASE_LOAN",
-    businessId,
-    userId
-  );
-  await createBudgetTotalInstance("TOTAL_COST_OF_SALES", businessId, userId);
-  await createBudgetTotalInstance(
-    "TOTAL_EXTRAORDINARY_EXPENSES",
-    businessId,
-    userId
-  );
-  await createBudgetTotalInstance(
-    "TOTAL_PERSOANL_EXPENSES",
-    businessId,
-    userId
-  );
-  await createBudgetTotalInstance(
     "TOTAL_FINIANCIAL_EXPENSES",
     businessId,
     userId

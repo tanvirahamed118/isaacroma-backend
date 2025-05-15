@@ -3,7 +3,6 @@ const {
   devidePerMonth,
   updateCategoryAll,
 } = require("../helper/budget.calculation");
-const createBlankInstance = require("../helper/cashflow/create.blank.instance");
 const {
   BUSINESS_CREATE_SUCCESS_MESSAGE,
   QUERY_SUCCESSFUL_MESSAGE,
@@ -15,6 +14,8 @@ const {
 const { SUCCESS_STATUS, ERROR_STATUS } = require("../utils/status");
 const updatePermonth = require("../helper/update.permonth");
 const finalCalculation = require("../helper/final.calculation");
+const budgetInstance = require("../helper/instance/budget.instance");
+const cashflowInstance = require("../helper/instance/cashflow.intance");
 
 // get all user
 async function getAllBusinessByUserid(req, res) {
@@ -106,6 +107,8 @@ async function createBusiness(req, res) {
         description,
       },
     });
+    await budgetInstance(userId, newBusiness?.id);
+    await cashflowInstance(newBusiness?.id);
     res.status(201).json({
       status: SUCCESS_STATUS,
       message: BUSINESS_CREATE_SUCCESS_MESSAGE,
@@ -555,10 +558,7 @@ async function createBudgetCalculation(req, res) {
         message: ERROR_FOR_CREATE_CALCULATION_MESSAGE,
       });
     }
-    if (existBusiness?.cashflows?.length === 0) {
-      await createBlankInstance(businessId);
-    }
-    await finalCalculation(false, userId, businessId);
+    await finalCalculation(userId, businessId);
     res.status(200).json({
       status: SUCCESS_STATUS,
       message: QUERY_SUCCESSFUL_MESSAGE,
@@ -599,7 +599,7 @@ async function updateCategoryPerMonth(req, res) {
     if (categoryId) {
       await updateCategoryAll(categoryId);
     }
-    await finalCalculation(true, userId, businessId);
+    await finalCalculation(userId, businessId);
     res.status(200).json({
       status: SUCCESS_STATUS,
       message: UPDATE_SUCCESSFUL_MESSAGE,
@@ -659,7 +659,7 @@ async function updateDeprecationProjection(req, res) {
         },
       });
     }
-    await finalCalculation(true, userId, businessId);
+    await finalCalculation(userId, businessId);
     res.status(200).json({
       status: SUCCESS_STATUS,
       message: UPDATE_SUCCESSFUL_MESSAGE,
@@ -697,7 +697,7 @@ async function updateCashflowMonth(req, res) {
       },
     });
 
-    await finalCalculation(true, userId, businessId);
+    await finalCalculation(userId, businessId);
     res.status(200).json({
       status: SUCCESS_STATUS,
       message: UPDATE_SUCCESSFUL_MESSAGE,
@@ -772,7 +772,7 @@ async function updateCashflowPercent(req, res) {
       },
     });
 
-    await finalCalculation(true, userId, businessId);
+    await finalCalculation(userId, businessId);
     res.status(200).json({
       status: SUCCESS_STATUS,
       message: UPDATE_SUCCESSFUL_MESSAGE,
@@ -807,7 +807,7 @@ async function CashflowTotalCalculation(req, res) {
         message: DATA_NOT_FOUND_MESSAGE,
       });
     }
-    await finalCalculation(true, userId, businessId);
+    await finalCalculation(userId, businessId);
     res.status(200).json({
       status: SUCCESS_STATUS,
       message: QUERY_SUCCESSFUL_MESSAGE,

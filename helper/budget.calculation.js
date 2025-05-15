@@ -16,30 +16,6 @@ async function devidePerMonth(name, value, categoryId, businessResultId) {
     "NOVEMBER",
     "DECEMBER",
   ];
-
-  let existResult;
-  if (categoryId) {
-    existResult = await Prisma.permonth.findFirst({
-      where: {
-        categoryId: categoryId,
-        ownername: name,
-      },
-    });
-  }
-
-  if (businessResultId) {
-    existResult = await Prisma.permonth.findFirst({
-      where: {
-        businessResultId: businessResultId,
-        ownername: name,
-      },
-    });
-  }
-
-  if (existResult) {
-    return;
-  }
-
   const data = monthNames.map((month) => ({
     name: month,
     value: Math.ceil(perMonthValue),
@@ -47,7 +23,6 @@ async function devidePerMonth(name, value, categoryId, businessResultId) {
     businessResultId: businessResultId ? businessResultId : null,
     ownername: name,
   }));
-
   await Prisma.permonth.createMany({ data });
 }
 
@@ -85,7 +60,7 @@ async function updatePerMonthForBusinessRes(value, businessResultId) {
   }
 }
 
-async function createCumulativePerMonth(update, userId, businessId) {
+async function updateCumulativePerMonth(userId, businessId) {
   const monthNames = [
     "JANUARY",
     "FEBRUARY",
@@ -133,73 +108,36 @@ async function createCumulativePerMonth(update, userId, businessId) {
     cumulativeSum += monthValues[month];
     cumulativeResult[month] = cumulativeSum;
   }
-
-  if (update) {
-    const existResult = await Prisma.businessResult.findFirst({
+  const existResult = await Prisma.businessResult.findFirst({
+    where: {
+      userId: userId,
+      businessId: businessId,
+      name: "CUMULATIVE_RESULT",
+    },
+  });
+  const id = existResult?.id;
+  await Prisma.businessResult.update({
+    where: {
+      id: id,
+    },
+    data: {
+      secondYear: Math.ceil((operatingProfitResult.secondYear ?? 0) + 0),
+      deviation: Math.ceil(
+        (operatingProfitResult.secondYear ?? 0) +
+          (operatingProfitResult.deviation ?? 0)
+      ),
+      expectedPercent: 0,
+    },
+  });
+  for (const month of monthNames) {
+    await Prisma.permonth.updateMany({
       where: {
-        userId: userId,
-        businessId: businessId,
-        name: "CUMULATIVE_RESULT",
-      },
-    });
-    const id = existResult?.id;
-    await Prisma.businessResult.update({
-      where: {
-        id: id,
+        businessResultId: id,
+        name: month,
       },
       data: {
-        secondYear: Math.ceil((operatingProfitResult.secondYear ?? 0) + 0),
-        deviation: Math.ceil(
-          (operatingProfitResult.secondYear ?? 0) +
-            (operatingProfitResult.deviation ?? 0)
-        ),
-        expectedPercent: 0,
+        value: Math.ceil(cumulativeResult[month]),
       },
-    });
-    for (const month of monthNames) {
-      await Prisma.permonth.updateMany({
-        where: {
-          businessResultId: id,
-          name: month, // also match month name!
-        },
-        data: {
-          value: Math.ceil(cumulativeResult[month]),
-        },
-      });
-    }
-  } else {
-    const existResult = await Prisma.businessResult.findFirst({
-      where: {
-        userId: userId,
-        businessId: businessId,
-        name: "CUMULATIVE_RESULT",
-      },
-    });
-    if (existResult) {
-      return;
-    }
-    const newResult = await Prisma.businessResult.create({
-      data: {
-        userId: userId,
-        businessId: businessId,
-        name: "CUMULATIVE_RESULT",
-        secondYear: Math.ceil((operatingProfitResult.secondYear ?? 0) + 0),
-        deviation: Math.ceil(
-          (operatingProfitResult.secondYear ?? 0) +
-            (operatingProfitResult.deviation ?? 0)
-        ),
-        expectedPercent: 0,
-      },
-    });
-    const createData = monthNames.map((month) => ({
-      name: month,
-      value: cumulativeResult[month],
-      businessResultId: newResult.id,
-      ownername: "CUMULATIVE_RESULT",
-    }));
-
-    await Prisma.permonth.createMany({
-      data: createData,
     });
   }
 }
@@ -371,7 +309,7 @@ async function updateCategoryAll(categoryId) {
 module.exports = {
   devidePerMonth,
   categoryTotalCal,
-  createCumulativePerMonth,
+  updateCumulativePerMonth,
   categoryFlowPercentCal,
   categoryTotalFlowPercentCal,
   updatePerMonthForBusinessRes,

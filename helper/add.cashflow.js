@@ -1,6 +1,30 @@
 const Prisma = require("../config/db.connect");
 
-async function devideCashflowPermonth(value, name, businessId) {
+async function devideCashflowPermonth(name, cashflowId) {
+  const monthNames = [
+    "JANUARY",
+    "FEBRUARY",
+    "MARCH",
+    "APRIL",
+    "MAY",
+    "JUNE",
+    "JULY",
+    "AUGUST",
+    "SEPTEMBER",
+    "OCTOBER",
+    "NOVEMBER",
+    "DECEMBER",
+  ];
+  const data = monthNames.map((month) => ({
+    name: month,
+    value: 0,
+    cashflowId: cashflowId,
+    ownername: name,
+  }));
+  await Prisma.cashflowmonth.createMany({ data });
+}
+
+async function updateCashflowPermonth(value, cashflowId) {
   const perMonthValue = parseFloat((value / 12).toFixed(2));
   const monthNames = [
     "JANUARY",
@@ -16,25 +40,20 @@ async function devideCashflowPermonth(value, name, businessId) {
     "NOVEMBER",
     "DECEMBER",
   ];
-
-  const newResult = await Prisma.cashflow.create({
-    data: {
-      name: name,
-      businessId: businessId,
-      total: 0,
-      flowPercent: 0,
-      inputPercent: 0,
-    },
+  const existingMonths = await Prisma.cashflowmonth.findMany({
+    where: { cashflowId },
+    orderBy: { name: "asc" },
   });
-
-  const data = monthNames.map((month) => ({
-    name: month,
-    value: perMonthValue,
-    cashflowId: newResult?.id,
-    ownername: name,
-  }));
-
-  await Prisma.cashflowmonth.createMany({ data });
+  for (const month of existingMonths) {
+    if (monthNames.includes(month.name)) {
+      await Prisma.cashflowmonth.update({
+        where: { id: month.id },
+        data: {
+          value: Math.ceil(perMonthValue),
+        },
+      });
+    }
+  }
 }
 
-module.exports = { devideCashflowPermonth };
+module.exports = { devideCashflowPermonth, updateCashflowPermonth };

@@ -15,19 +15,22 @@ const requestFullCalculation = require("./request.full.calculation");
 const salesForeCastCal = require("./sales.forecast.cal");
 const totalExpensesCal = require("./total.expense.cal");
 
-async function finalCalculation(update, userId, businessId) {
-  await budgetCategoryTotalCalculation(update, userId, businessId);
-  await totalExpensesCal(update, businessId, userId);
+async function finalCalculation(userId, businessId) {
+  // budget calculation
+  await budgetCategoryTotalCalculation(userId, businessId);
+  await totalExpensesCal(businessId, userId);
   await businessResBudgetPercentCal(businessId, userId);
-  await salesForeCastCal(update, businessId, userId);
-  await requestFullCalculation(update, businessId, userId);
-  await requestPermonthCal(userId, businessId);
-  await requestTotalCal(businessId);
-  await requestPercentCal(businessId);
+  await salesForeCastCal(businessId, userId);
+  await requestFullCalculation(businessId, userId);
   await categoryFlowPercentCal(userId, businessId);
   await categoryTotalFlowPercentCal(userId, businessId);
   await totalSalesRevFlowPercentCal(businessId, userId);
   await otherIncomeExpenseFlowpercentCal(businessId);
+
+  // cashflow calculation
+  await requestTotalCal(businessId);
+  await requestPermonthCal(userId, businessId);
+  await requestPercentCal(businessId);
 }
 
 module.exports = finalCalculation;

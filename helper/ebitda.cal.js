@@ -1,10 +1,7 @@
 const Prisma = require("../config/db.connect");
-const {
-  devidePerMonth,
-  updatePerMonthForBusinessRes,
-} = require("./budget.calculation");
+const { updatePerMonthForBusinessRes } = require("./budget.calculation");
 
-async function ebitdaCal(update, businessId, userId) {
+async function ebitdaCal(businessId, userId) {
   const categories = await Prisma.category.findMany({
     where: {
       businessId,
@@ -52,10 +49,6 @@ async function ebitdaCal(update, businessId, userId) {
     (sum, item) => sum + (item.firstYear || 0),
     0
   );
-  const totalSecondCapitalRev = capitalRev.reduce(
-    (sum, item) => sum + (item.secondYear || 0),
-    0
-  );
 
   const secondTotalCostOfSales = costOfsales.reduce(
     (sum, item) => sum + (item.secondYear || 0),
@@ -82,7 +75,6 @@ async function ebitdaCal(update, businessId, userId) {
     0
   );
   const totalFirstForecast = totalFirstCapitalRev + firstSalesRevenue;
-  const totalSecondForecast = secondSalesRevenue + totalSecondCapitalRev;
   const totalFirstDirectExpense =
     firstTotalCostOfSales + firstTotalExtraordinary + firstTotalPersonal;
   const totalSeondDirectExpense =
@@ -109,55 +101,26 @@ async function ebitdaCal(update, businessId, userId) {
     ((secondYearEbitda / firstYearEbitda - 1) * 100).toFixed(2)
   );
 
-  if (update) {
-    const existBusinessResult = await Prisma.businessResult.findFirst({
-      where: {
-        businessId: businessId,
-        userId: userId,
-        name: "EBITDA",
-      },
-    });
-    await Prisma.businessResult.update({
-      where: {
-        id: existBusinessResult?.id,
-      },
-      data: {
-        firstYear: Math.ceil(firstYearEbitda),
-        secondYear: Math.ceil(secondYearEbitda),
-        expectedPercent: expectedPercent,
-        budgetPercent: Math.ceil(budgetPercent),
-        deviation: Math.ceil(devationEbitda),
-      },
-    });
-    await updatePerMonthForBusinessRes(
-      firstYearEbitda,
-      existBusinessResult?.id
-    );
-  } else {
-    const existResult = await Prisma.businessResult.findFirst({
-      where: {
-        userId: userId,
-        businessId: businessId,
-        name: "EBITDA",
-      },
-    });
-    if (existResult) {
-      return;
-    }
-    const newResult = await Prisma.businessResult.create({
-      data: {
-        name: "EBITDA",
-        firstYear: Math.ceil(firstYearEbitda),
-        secondYear: Math.ceil(secondYearEbitda),
-        expectedPercent: expectedPercent,
-        budgetPercent: Math.ceil(budgetPercent),
-        deviation: Math.ceil(devationEbitda),
-        businessId: businessId,
-        userId: userId,
-      },
-    });
-    await devidePerMonth("EBITDA", firstYearEbitda, null, newResult?.id);
-  }
+  const existBusinessResult = await Prisma.businessResult.findFirst({
+    where: {
+      businessId: businessId,
+      userId: userId,
+      name: "EBITDA",
+    },
+  });
+  await Prisma.businessResult.update({
+    where: {
+      id: existBusinessResult?.id,
+    },
+    data: {
+      firstYear: Math.ceil(firstYearEbitda),
+      secondYear: Math.ceil(secondYearEbitda),
+      expectedPercent: expectedPercent,
+      budgetPercent: Math.ceil(budgetPercent),
+      deviation: Math.ceil(devationEbitda),
+    },
+  });
+  await updatePerMonthForBusinessRes(firstYearEbitda, existBusinessResult?.id);
 }
 
 module.exports = ebitdaCal;

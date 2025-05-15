@@ -1,6 +1,6 @@
 const Prisma = require("../config/db.connect");
 
-async function projectionDeprecationCal(update, businessId, userId) {
+async function projectionDeprecationCal(businessId, userId) {
   const existbusinessResult = await Prisma.businessResult.findFirst({
     where: {
       businessId,
@@ -15,17 +15,14 @@ async function projectionDeprecationCal(update, businessId, userId) {
       existbusinessResult?.deviation
     ).toFixed(2)
   );
-
-  if (update) {
-    await Prisma.businessResult.update({
-      where: {
-        id: existbusinessResult?.id,
-      },
-      data: {
-        firstYear: Math.ceil(firstYearResult),
-      },
-    });
-  }
+  await Prisma.businessResult.update({
+    where: {
+      id: existbusinessResult?.id,
+    },
+    data: {
+      firstYear: Math.ceil(firstYearResult),
+    },
+  });
 }
 
 module.exports = projectionDeprecationCal;

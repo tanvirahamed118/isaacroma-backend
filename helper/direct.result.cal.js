@@ -1,10 +1,7 @@
 const Prisma = require("../config/db.connect");
-const {
-  devidePerMonth,
-  updatePerMonthForBusinessRes,
-} = require("./budget.calculation");
+const { updatePerMonthForBusinessRes } = require("./budget.calculation");
 
-async function directResultCal(update, businessId, userId) {
+async function directResultCal(businessId, userId) {
   const totalSalesRevenue = await Prisma.businessResult.findFirst({
     where: {
       userId: userId,
@@ -70,57 +67,26 @@ async function directResultCal(update, businessId, userId) {
     ).toFixed(2)
   );
 
-  if (update) {
-    const existResult = await Prisma.businessResult.findFirst({
-      where: {
-        businessId: businessId,
-        userId: userId,
-        name: "DIRECT_RESULT",
-      },
-    });
-    await Prisma.businessResult.update({
-      where: {
-        id: existResult?.id,
-      },
-      data: {
-        firstYear: Math.ceil(firstYearDirectResult),
-        secondYear: Math.ceil(secondYearDirectResult),
-        expectedPercent: expectedPercentDirectResult,
-        budgetPercent: Math.ceil(budgetPercentDirectResult),
-        deviation: Math.ceil(totalDeprecationDirectResult),
-      },
-    });
-    await updatePerMonthForBusinessRes(firstYearDirectResult, existResult?.id);
-  } else {
-    const existResult = await Prisma.businessResult.findFirst({
-      where: {
-        userId: userId,
-        businessId: businessId,
-        name: "DIRECT_RESULT",
-      },
-    });
-    if (existResult) {
-      return;
-    }
-    const newResult = await Prisma.businessResult.create({
-      data: {
-        name: "DIRECT_RESULT",
-        firstYear: Math.ceil(firstYearDirectResult),
-        secondYear: Math.ceil(secondYearDirectResult),
-        expectedPercent: expectedPercentDirectResult,
-        budgetPercent: Math.ceil(budgetPercentDirectResult),
-        deviation: Math.ceil(totalDeprecationDirectResult),
-        businessId: businessId,
-        userId: userId,
-      },
-    });
-    await devidePerMonth(
-      "DIRECT_RESULT",
-      firstYearDirectResult,
-      null,
-      newResult?.id
-    );
-  }
+  const existResult = await Prisma.businessResult.findFirst({
+    where: {
+      businessId: businessId,
+      userId: userId,
+      name: "DIRECT_RESULT",
+    },
+  });
+  await Prisma.businessResult.update({
+    where: {
+      id: existResult?.id,
+    },
+    data: {
+      firstYear: Math.ceil(firstYearDirectResult),
+      secondYear: Math.ceil(secondYearDirectResult),
+      expectedPercent: expectedPercentDirectResult,
+      budgetPercent: Math.ceil(budgetPercentDirectResult),
+      deviation: Math.ceil(totalDeprecationDirectResult),
+    },
+  });
+  await updatePerMonthForBusinessRes(firstYearDirectResult, existResult?.id);
 }
 
 module.exports = directResultCal;

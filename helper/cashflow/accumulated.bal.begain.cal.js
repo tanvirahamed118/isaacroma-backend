@@ -33,7 +33,6 @@ async function accoumulatedBalBegainPermonthCal(cashflowId, businessId) {
     },
   });
 
-  // Calculate values per month
   let perMonthCal = {};
   let previousValue = 0;
 
@@ -50,8 +49,6 @@ async function accoumulatedBalBegainPermonthCal(cashflowId, businessId) {
     );
     previousValue = netBalEntry ? Number(netBalEntry.value) : previousValue;
   }
-
-  // Fetch existing entries for update just once
   const updatePermonth = await Prisma.cashflowmonth.findMany({
     where: {
       cashflowId,
