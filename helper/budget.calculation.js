@@ -60,6 +60,40 @@ async function updatePerMonthForBusinessRes(value, businessResultId) {
   }
 }
 
+async function updateCategoryPerMonthValue(value, categoryId) {
+  const perMonthValue = parseFloat((value / 12).toFixed(2));
+  const monthNames = [
+    "JANUARY",
+    "FEBRUARY",
+    "MARCH",
+    "APRIL",
+    "MAY",
+    "JUNE",
+    "JULY",
+    "AUGUST",
+    "SEPTEMBER",
+    "OCTOBER",
+    "NOVEMBER",
+    "DECEMBER",
+  ];
+
+  const existingMonths = await Prisma.permonth.findMany({
+    where: { categoryId },
+    orderBy: { name: "asc" },
+  });
+
+  for (const month of existingMonths) {
+    if (monthNames.includes(month.name)) {
+      await Prisma.permonth.update({
+        where: { id: month.id },
+        data: {
+          value: Math.ceil(perMonthValue),
+        },
+      });
+    }
+  }
+}
+
 async function updateCumulativePerMonth(userId, businessId) {
   const monthNames = [
     "JANUARY",
@@ -179,7 +213,6 @@ async function categoryTotalCal(categories, name, businessId, userId) {
       expectedPercent: totalExpectedPercent,
     },
   });
-  await updatePerMonthForBusinessRes(totalFirstYear, existBusinessResult?.id);
 }
 
 async function categoryFlowPercentCal(userId, businessId) {
@@ -314,4 +347,5 @@ module.exports = {
   categoryTotalFlowPercentCal,
   updatePerMonthForBusinessRes,
   updateCategoryAll,
+  updateCategoryPerMonthValue,
 };

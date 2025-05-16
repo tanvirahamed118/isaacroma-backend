@@ -114,6 +114,7 @@ model businessResult {
   expectedPercent Float?
   flowPercent Float?
   deviation Float?
+  projection Float?
   businessId String
   business business @relation(fields: [businessId], references: [id], onDelete: Cascade)
   permonths permonth[]

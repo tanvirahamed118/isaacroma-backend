@@ -2,6 +2,7 @@ const Prisma = require("../config/db.connect");
 const {
   devidePerMonth,
   updateCategoryAll,
+  updateCategoryPerMonthValue,
 } = require("../helper/budget.calculation");
 const {
   BUSINESS_CREATE_SUCCESS_MESSAGE,
@@ -12,7 +13,6 @@ const {
   ERROR_FOR_CREATE_CALCULATION_MESSAGE,
 } = require("../utils/response");
 const { SUCCESS_STATUS, ERROR_STATUS } = require("../utils/status");
-const updatePermonth = require("../helper/update.permonth");
 const finalCalculation = require("../helper/final.calculation");
 const budgetInstance = require("../helper/instance/budget.instance");
 const cashflowInstance = require("../helper/instance/cashflow.intance");
@@ -447,7 +447,7 @@ async function updateCategoryById(req, res) {
     (Number(firstYear) * Number(expectedPercent)) / 100 + Number(firstYear);
   const deviation = secondYear - Number(firstYear);
   try {
-    const newCategory = await Prisma.category.update({
+    const updateCategory = await Prisma.category.update({
       where: {
         id: id,
       },
@@ -459,11 +459,11 @@ async function updateCategoryById(req, res) {
         deviation: deviation,
       },
     });
-    await updatePermonth(id, firstYear);
+    await updateCategoryPerMonthValue(firstYear, id);
     res.status(200).json({
       status: SUCCESS_STATUS,
       message: UPDATE_SUCCESSFUL_MESSAGE,
-      category: newCategory,
+      category: updateCategory,
     });
   } catch (error) {
     res.status(500).json({

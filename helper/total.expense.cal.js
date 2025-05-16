@@ -1,5 +1,4 @@
 const Prisma = require("../config/db.connect");
-const { updatePerMonthForBusinessRes } = require("./budget.calculation");
 
 async function totalExpensesCal(businessId, userId) {
   const categories = await Prisma.category.findMany({
@@ -50,7 +49,13 @@ async function totalExpensesCal(businessId, userId) {
       name: "TOTAL_EXPENSES",
     },
   });
-
+  await updateTotalExpensePermonth(
+    "EXPENSE",
+    businessId,
+    userId,
+    "TOTAL_EXPENSES",
+    existBusinessResult?.id
+  );
   await Prisma.businessResult.update({
     where: {
       id: existBusinessResult?.id,
@@ -59,10 +64,66 @@ async function totalExpensesCal(businessId, userId) {
       firstYear: Math.ceil(totalFirstYearExpense),
     },
   });
-  await updatePerMonthForBusinessRes(
-    totalFirstYearExpense,
-    existBusinessResult?.id
-  );
+}
+
+async function updateTotalExpensePermonth(
+  type,
+  businessId,
+  userId,
+  resultName,
+  businessResultId
+) {
+  const monthNames = [
+    "JANUARY",
+    "FEBRUARY",
+    "MARCH",
+    "APRIL",
+    "MAY",
+    "JUNE",
+    "JULY",
+    "AUGUST",
+    "SEPTEMBER",
+    "OCTOBER",
+    "NOVEMBER",
+    "DECEMBER",
+  ];
+  const allPerMonths = await Prisma.category.findMany({
+    where: {
+      type: type,
+      businessId,
+      userId,
+    },
+    include: {
+      permonths: true,
+    },
+  });
+  const allPerMonthItems = allPerMonths.flatMap((item) => item.permonths);
+  for (const month of monthNames) {
+    const specificMonth = allPerMonthItems?.filter(
+      (item) => item?.name === month
+    );
+
+    let totalPermonth = specificMonth.reduce(
+      (sum, item) => sum + (item.value || 0),
+      0
+    );
+    const existPermonth = await Prisma.permonth.findFirst({
+      where: {
+        name: month,
+        ownername: resultName,
+        businessResultId: businessResultId,
+      },
+    });
+
+    await Prisma.permonth.update({
+      where: {
+        id: existPermonth?.id,
+      },
+      data: {
+        value: totalPermonth,
+      },
+    });
+  }
 }
 
 module.exports = totalExpensesCal;

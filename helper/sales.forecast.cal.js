@@ -1,6 +1,20 @@
 const Prisma = require("../config/db.connect");
-const { updatePerMonthForBusinessRes } = require("./budget.calculation");
+
 async function salesForeCastCal(businessId, userId) {
+  const existBusinessResult = await Prisma.businessResult.findFirst({
+    where: {
+      businessId: businessId,
+      userId: userId,
+      name: "MONTHLY_SALES_FORECAST",
+    },
+  });
+  await salesForcastPermonth(
+    "INCOME",
+    businessId,
+    userId,
+    "MONTHLY_SALES_FORECAST",
+    existBusinessResult?.id
+  );
   const categories = await Prisma.category.findMany({
     where: {
       businessId,
@@ -52,13 +66,6 @@ async function salesForeCastCal(businessId, userId) {
   const firsttotalSalesForecCast = parseInt(
     (firstSalesRevenue + firstCapitalRevenue).toFixed(2)
   );
-  const existBusinessResult = await Prisma.businessResult.findFirst({
-    where: {
-      businessId: businessId,
-      userId: userId,
-      name: "MONTHLY_SALES_FORECAST",
-    },
-  });
 
   await Prisma.businessResult.update({
     where: {
@@ -70,10 +77,65 @@ async function salesForeCastCal(businessId, userId) {
       deviation: Math.ceil(deviation),
     },
   });
-  await updatePerMonthForBusinessRes(
-    firsttotalSalesForecCast,
-    existBusinessResult?.id
-  );
+}
+
+async function salesForcastPermonth(
+  type,
+  businessId,
+  userId,
+  resultName,
+  businessResultId
+) {
+  const monthNames = [
+    "JANUARY",
+    "FEBRUARY",
+    "MARCH",
+    "APRIL",
+    "MAY",
+    "JUNE",
+    "JULY",
+    "AUGUST",
+    "SEPTEMBER",
+    "OCTOBER",
+    "NOVEMBER",
+    "DECEMBER",
+  ];
+  const allPerMonths = await Prisma.category.findMany({
+    where: {
+      type: type,
+      businessId,
+      userId,
+    },
+    include: {
+      permonths: true,
+    },
+  });
+  const allPerMonthItems = allPerMonths.flatMap((item) => item.permonths);
+  for (const month of monthNames) {
+    const specificMonth = allPerMonthItems?.filter(
+      (item) => item?.name === month
+    );
+
+    let totalPermonth = specificMonth.reduce(
+      (sum, item) => sum + (item.value || 0),
+      0
+    );
+    const existPermonth = await Prisma.permonth.findFirst({
+      where: {
+        name: month,
+        ownername: resultName,
+        businessResultId: businessResultId,
+      },
+    });
+    await Prisma.permonth.update({
+      where: {
+        id: existPermonth?.id,
+      },
+      data: {
+        value: totalPermonth,
+      },
+    });
+  }
 }
 
 module.exports = salesForeCastCal;
